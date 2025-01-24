@@ -1,0 +1,599 @@
+  {% extends 'index/layout.html.twig' %}
+  {% block body%}
+  <style type="text/css">
+    .braintree-hosted-fields-invalid{
+      border: solid 1px rgba(255, 0, 0, 0.51);
+      color: rgba(255, 0, 0, 0.51);
+    }
+    .error-msg-form {
+      color: #FF0000;
+      position: absolute;
+      padding: 0px 0px;
+      display: none;
+    }
+    .grn {
+      color: #6fc041 !important;
+    }
+    #user_card_details{
+      /*display:none;*/
+      clear:both
+    }
+  </style>
+  <div class="clearfix"></div>
+
+  </div>
+  <div id="preloader" style="display:none;">
+          <img style="text-align:center;" id="loading-image" src="{{asset('bundles/paydez-assets/theme/images/loader_logo.gif')}}">
+          <h1 class="rjlod" id="loaderText">{% set label = 588 | getmessage_id %}{{label}}.......</h1>
+          </div>
+  <div class="clearfix"></div>
+  <div class="mn_order_main my_tpn">
+  <div class="container">
+  <div class="mn_center">
+          <p>{% set label = 800 | getmessage_id %}{{label}}</p>
+        </div>
+    <div class="col-md-10 col-sm-12 col-xs-12 col-md-offset-1 col-xs-offset-0">
+      <div class="mn_order mn_payment">
+        <div class="col-md-12 nopad mn_inline_rec">
+          <div class="mn_mar" style="border-bottom: double 3px #ccc;">
+            <div class="col-md-9 col-sm-9 col-xs-12 pymt_scl no-padd">
+
+              {% set ConversionRates = 1 | getConversionRates %}
+              {% set default_currency_symbol = app.session.get('default_language') | getcurrencysymbol %}
+              {% set subTotal = 0 %}
+              {% set VatandTaxTotal = 0 %}
+
+              {% for key, data in data %}
+
+              <div class="col-md-12 col-sm-12 col-xs-12" style="padding:10px 0px;">
+                  <div class="mn_loc"> <img src="https://fm.transfer-to.com/logo_operator/logo-{{data.oprId}}-2.png" alt="" /> </div>
+                  <div class="mn_cont">
+                  
+                  {% if rechargetype == 0 %}
+                    {% if data.serviceType.id == 7 %}
+                      <h5>+{{data.accountNumber}}</h5>
+                      <p>{{data.oprName}}</p>
+                      <small>{{data.productName}}</small>
+                    {% elseif  data.serviceType.id == 9 %}
+                       <h5>+{{data.extensionCode~" "~data.num}}</h5>
+                      <p>{{data.oprName}}</p>
+                    {% else %}
+                       <h5>{{data.accountNumber}}</h5>
+                       <p>{{data.oprName}}</p>
+                       <small>{{data.productName}}</small>
+                    {% endif %}
+                  
+                  {% else %}
+                    {% if data.serviceType.id == 7 %}
+                      <h5>+{{data.accountNumber}}</h5>
+                      <p>{{data.oprName}}</p>
+                      <small>{{data.productName}}</small>
+                    {% elseif  data.serviceType.id == 9 %}
+                       <h5>+{{data.extensionCode~" "~data.num}}</h5>
+                      <p>{{data.oprName}}</p>
+                    {% else %}
+                       <h5>{{data.accountNumber}}</h5>
+                       <p>{{data.oprName}}</p>
+                       <small>{{data.productName}}</small>
+                    {% endif %}
+                  {% endif %}
+
+                  </div>
+                </div>
+                {% set deductedDataAmount = data.originalPrice %}
+
+                {% if data.b2bMarkup == 0 %}
+                  {% set deductedData = data.originalPrice | showB2bServiceRechargePrices(data.originalCurrency,ConversionRates) %}
+                  {% set deductedDataAmount = deductedData[0] %}
+                  {% set updateRechargeLogs = data.id | updateRechargeLog(deductedDataAmount) %}
+                {% endif %}
+
+                {% set planPrice = (ConversionRates | currencyConvertor(data.originalCurrency,deductedDataAmount)) | split(' ') %}
+
+                {% set subTotal = planPrice[0]+subTotal %}
+
+                {% set VatandTax = (ConversionRates | currencyConvertor(data.originalCurrency,(data.vat+data.tax))) | split(' ') %}
+
+                {% set VatandTaxTotal = (VatandTaxTotal+VatandTax[0]) | round(2)%}
+   
+            {% endfor %}
+            </div>
+
+            {% set processfees = (subTotal | getprocessingfee) | round(2) %}
+            {% set fulltotal = (subTotal + VatandTaxTotal + processfees) %}
+           
+            <div class="col-md-2 col-sm-2 col-xs-12 pull-right">
+              <div class="mn_pr text-center">
+
+                  <!-- price in default currency -->
+                  {% set sub_total = default_currency_symbol~" "~fulltotal %}
+                  
+
+                  <!-- price in USD \abandoned-->
+                  {#{% set sub_total_price = default_currency_symbol | currencyConversionToUSD(fulltotal) %}#}
+
+                  {% set sub_total_priceData = ConversionRates | currencyConversionToAny(default_currency_symbol,fulltotal,'GBP') %}
+                  {% set sub_total_price    = sub_total_priceData[0] %}
+                  {% set sub_total_currency = sub_total_priceData[1] %}
+                  {% set updatePrice = sub_total_price | setAmtSession(sub_total_currency) %}
+
+                  <h5 class='text-center'>{{sub_total}}</h5>
+                <!--   <span id="usdamt">{#{{sub_total_currency~" "~sub_total_price}}#}</span> -->
+
+                <!-- check if B2B has sufficient fund -->
+                {% set isB2Buser = app.session.get('user_id') | getB2Bdetails() %}
+                {% if isB2Buser !=0 %}
+                  {% set checkBalance = isB2Buser.parentId | checkB2bBalance(sub_total_price,sub_total_currency) %}
+                {% endif %}
+                
+                <!-- /check if B2B has sufficient fund -->
+                <div class="col-md-8 col-sm-4 col-xs-4">
+                
+                </div>
+                
+              </div>
+            </div>
+          </div>
+ 
+          	{% if wallet[0] is defined and  wallet[0] != 0 %}
+
+            <div class="col-md-12 col-sm-12 col-xs-12 no-padd">
+	            <div class="col-lg-6 col-md-12 col-sm-12 col-xs-12"></div>
+	            <div class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
+	              <div class="check_box pull-right ch_mt">
+	              <input type="checkbox" id="a_1" class="room_account" name="use_wallet">
+	              <label for="a_1"> <span>{% set label = 973 | getmessage_id %}{{label}}</span> </label>
+
+	              <input onclick="usewallet('{{sub_total}}','{{sub_total_price}}');" type="submit" value="{% set label = 881 | getmessage_id %}{{label}}" name="apply" class="promosubmit">
+	              </div>
+
+	            </div>
+            </div>
+            {% endif %}
+
+        </div>
+        <div class="clearfix"></div>
+        {% if checkBalance is defined and checkBalance==0 %}
+
+        <div class="col-md-12">
+          <h3 class="col-md-12 ppclr text-center"><img style="width: 100px;" src="{{asset('bundles/paydez-assets/images/oops-sad.jpeg')}}">Insufficient funds to process, please contact your agent .</h3>
+          <div class="col-md-7"><button class="btn btn-success sscs pull-right" style="margin: 0 10px 18px 0;">Go Home</button></div>
+        </div>
+
+        {% else %}
+        
+        <div class="col-md-12 col-sm-12 col-xs-12 nopad">
+          <div class="mn_tra">
+            <div class="col-md-6 col-sm-6 col-xs-12">
+                <span class="error-msg-form" id="promo_error"></span>
+            </div>
+            <div class="col-md-5 col-sm-6 col-xs-12 pull-right">
+              <form id="prm-form" method="POST">
+                <div class="col-md-9 col-sm-8 col-xs-8 nopad">
+                <div class="payblnhm singecartpricebuk ritaln">
+                  <input type="text" placeholder="{% set label = 589 | getmessage_id %}{{label}}" name="promocodeval" id="promocodeval" class="promocode" autocomplete="off" value="" maxlength="7" >
+                  <input type="hidden" value="" name="PROMO_CD" value="" >
+                </div>
+              </div>
+              <div class="col-md-3 col-sm-4 col-xs-4 nopad">
+                <input type="submit" value="{% set label = 590 | getmessage_id %}{{label}}" name="apply" class="apply">
+              </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="clearfix"></div>
+        {% set lastTransDetails = app.session.get('user_id') | getLastTransactionDetails %}
+        {% set transDetails = "" %}
+        {% if lastTransDetails is not empty %}
+          {% set transDetails =  lastTransDetails[0].billingDetails | jsonDecodeStdClass%}
+        {% endif %}
+       
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <!-- <div class="col-md-12 col-sm-12 col-xs-12 nopad_left">
+                              <label>&nbsp</label>
+                                <a href="javascript:void(0)" class="edt_bt" id="edt_bt">Edit Billing Details</a>
+                             </div> -->
+                             <div class="col-md-12 no-padd mtppmt11" id="user_card_details" >
+                               <h4 class="ble">{% set label = 974 | getmessage_id %}{{label}}</h4>
+                               <div class="row">
+                               <form method="POST" action="https://hpp.realexpayments.com/pay" id="payment-form">
+                                 <div class="col-md-6 mtppmt11">
+                                    <input type="text" class="form-control rds0 ht40" name="firstName" id="firstName_debit" placeholder="{% set label = 975 | getmessage_id %}{{label}}" required="" value="{{transDetails['firstName'] ?? ''}}"  data-stripe="number">
+                                    <span class="error-msg-form firstName_debit">sdfsdfdsf</span>
+                                 </div>
+                                 <div class="col-md-6 mtppmt11">
+                                    <input type="text" class="form-control rds0 ht40" name="streetAddress" id="streetAddress_debit" placeholder="{% set label = 976 | getmessage_id %}{{label}}" required="" value="{{transDetails['streetAddress'] ?? ''}}"  data-stripe="number">
+                                    <span class="error-msg-form streetAddress_debit">sdfsdfdsf</span>
+                                 </div>
+                                 <div class="col-md-6 mtppmt11">
+                                    <input type="text" class="form-control rds0 ht40" name="region" id="region_debit" placeholder="{% set label = 977 | getmessage_id %}{{label}}" required="" value="{{transDetails['region'] ?? ''}}"  data-stripe="number">
+                                    <span class="error-msg-form region_debit">sdfsdfdsf</span>
+                                 </div>
+                                 <div class="col-md-6 mtppmt11">
+                                    <div class="form-group">
+                                      {% set countryListPayment = 1 | getAllCountriesFromDB %}
+                                      <select class="form-control rds0 ht40" id="BILLING_CO" name="BILLING_CO">
+                                      {% if transDetails != "" %}
+                                        {% for dataval in countryListPayment %}
+                                          <option {{transDetails['BILLING_CO'] == dataval.name ? 'selected' : ''}}>{{dataval.name}}</option>
+                                        {% endfor %}
+                                      {% else %}
+                                        {% for dataval in countryListPayment %}
+                                          <option {{dataval.id == app.session.get('default_country') ? 'selected' : ''}}>{{dataval.name}}</option>
+                                        {% endfor %}
+                                      {% endif %}
+                                        
+                                      </select>
+                                      <span class="error-msg-form countryName_debit">sdfsdfdsf</span>
+                                    </div>
+                                 </div>
+                                 <div class="col-md-6 mtppmt7">
+                                    <input type="text" class="form-control rds0 ht40" name="BILLING_CODE" id="BILLING_CODE" placeholder="{% set label = 978 | getmessage_id %}{{label}}" required=""  data-stripe="number" value="{{transDetails['BILLING_CODE'] ?? ''}}">
+                                    <span class="error-msg-form postalCode_debit">sdfsdfdsf</span>
+                                 </div>
+                                 <div class="col-md-6 mtppmt7">
+                                    <div class="check_box">
+                                            <input type="checkbox" id="a_2" class="room_account" name="SAVE_BILLING_STATUS">
+                                            <label for="a_2"> <span>{% set label = 979 | getmessage_id %}{{label}}</span> </label>
+                                          </div>
+                                 </div>
+                                <!-- hidden  -->
+
+                                 {% if rechargetype == 0 %}
+                                 <input type="hidden" value="0" name="WALLET_STATUS" id="WALLET_STATUS"/>                          
+                                 <input type="hidden" value="0" name="logid" id="logid"/>
+                                 {% else %}
+                                 <input type="hidden" value="{{data[0].userId}}" name="logid" id="logid"/>
+                                 {% endif %}
+				                        <input type="hidden" name="PROMO_CD" value="" >
+                                <input type="hidden" name="MERCHANT_ID" value="gistpallimited">
+                                <input type="hidden" name="MERCHANT_RESPONSE_URL" value="{{url('getRealexResponse')}}">
+                                <input type="hidden" name="ORDER_ID" value="{{app.session.get('temp_session_user')}}">
+                                <input type="hidden" name="ACCOUNT" value="internet">
+                                <input type="hidden" name="AMOUNT" value="{{sub_total_price}}">
+                                <input type="hidden" name="CURRENCY" value="GBP">
+                                <input type="hidden" name="TIMESTAMP" value="{{'now' | date('YmdHis')}}">
+                                <input type="hidden" name="SHA1HASH" value="">
+                                <input type="hidden" name="AUTO_SETTLE_FLAG" value="1">
+                                <input type="hidden" name="RETURN_TSS" value="1">
+                                <input type="hidden" name="SHIPPING_CODE" value="">
+                                <input type="hidden" name="SHIPPING_CO" value="">
+                                <input type="hidden" name="CUST_NUM" value="">
+                                <input type="hidden" name="VAR_REF" value="">
+                                <input type="hidden" name="PROD_ID" value="{{app.session.get('temp_session_user')}}">
+                                <input type="hidden" name="HPP_VERSION" value="2">
+                                <input type="hidden" name="HPP_FRAUDFILTER_MODE" value="ACTIVE">
+                                <input type="hidden" name="PM_METHODS" value="cards|paypal">
+                                <input type="hidden" name="OFFER_SAVE_CARD" value="1">
+                                <input type="hidden" name="PAYER_REF" value="">
+                                <input type="hidden" name="PMT_REF" value="">
+                                <input type="hidden" name="PAYER_EXIST" value="0">
+                                <input type="hidden" name="CARD_STORAGE_ENABLE" value="1">
+                                <input type="hidden" name="DCC_ENABLE" value="0">
+                                <input type="hidden" name="RECHARGE_TYPE" value="1">
+                                <input type="hidden" name="USER_PAYDEZ" value="{{app.session.get('user_id')}}">
+                                 <!-- /hidden -->
+                                 <div class="col-md-4 col-md-offset-4 mtppmt11 brmpan">
+                                 <input type="submit" class="apply" value="{% set label = 980 | getmessage_id %}{{label}}" id="paynow-btn">
+                               <!--   <button type="button" class="apply hidden" id="payButtonId" >Proceed to Payment</button>
+                                  <button id="payButtonId_hd" class="apply" type="button">Proceed to Payment</button> -->
+                                 </div>
+                                 </form>
+                               </div>
+                             </div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-md-12">
+      <ul class="crd_img">
+         <li><img src="{{asset('bundles/paydez-assets/theme/images/crd6.png')}}"></li>
+         <li><img src="{{asset('bundles/paydez-assets/theme/images/crd5.png')}}"></li>
+         <li><img src="{{asset('bundles/paydez-assets/theme/images/crd4.png')}}"></li>
+         <li><img src="{{asset('bundles/paydez-assets/theme/images/crd3.png')}}"></li>
+         <li><img src="{{asset('bundles/paydez-assets/theme/images/crd2.png')}}"></li>
+         <li><img src="{{asset('bundles/paydez-assets/theme/images/crd1.png')}}"></li>
+      </ul>
+    </div>
+  </div>
+  <div class="clearfix"></div>
+  <script src="{{asset('bundles/paydez-assets/theme/js/jquery-1.12.1.min.js')}}"></script>
+  <script src="{{asset('bundles/paydez-assets/theme/js/rxp-js.js')}}"></script>
+    
+    <script>
+    // get the HPP JSON from the server-side SDK
+        $(document).ready(function () {
+            
+            // setRequest(false);
+
+            $('#card-payment-form').submit(function(){
+              $('#preloader').show();
+            });
+
+            $('#payButtonId_hd').click(function(){
+              var status = checkbillingdetailsDebit();
+              if(status != false){
+                setRequest(true);
+                
+              }
+              return false;
+            });
+
+            $('#paynow-btn').click(function(){
+              var status = checkbillingdetailsDebit();
+              if(status == false){
+                return false;
+              }
+              $('#preloader').show();
+              var TIMESTAMP = $('input[name=TIMESTAMP]').val();
+              var MERCHANT_ID = $('input[name=MERCHANT_ID]').val();
+              var ORDER_ID = $('input[name=ORDER_ID]').val();
+              var AMOUNT = $('input[name=AMOUNT]').val();
+              var CURRENCY = $('input[name=CURRENCY]').val();
+              var PAYER_REF = $('input[name=PAYER_REF]').val();
+              var PMT_REF = $('input[name=PMT_REF]').val();
+              var HPP_FRAUDFILTER_MODE = $('input[name=HPP_FRAUDFILTER_MODE]').val();
+             
+
+              $.ajax({
+                'url' : '{{url("set_realex_request")}}',
+                'type' : 'POST',
+                'data' : {
+                  'TIMESTAMP' : TIMESTAMP,
+                  'MERCHANT_ID' : MERCHANT_ID,
+                  'ORDER_ID'  : ORDER_ID,
+                  'AMOUNT'    : AMOUNT,
+                  'CURRENCY'  : CURRENCY,
+                  'PAYER_REF' : PAYER_REF,
+                  'PMT_REF'   : PMT_REF,
+                  'HPP_FRAUDFILTER_MODE' : HPP_FRAUDFILTER_MODE
+                },
+                success : function(response){
+                  $('input[name=MERCHANT_ID]').val(response.MERCHANT_ID);
+                  $('input[name=ORDER_ID]').val(response.ORDER_ID);
+                   $('input[name=PAYER_REF]').val(response.PAYER_REF);
+                  $('input[name=PMT_REF]').val(response.PMT_REF);
+                  $('input[name=PAYER_EXIST]').val(response.PAYER_EXIST);
+                  $('input[name=AMOUNT]').val(response.AMOUNT);
+                  $('input[name=TIMESTAMP]').val(response.TIMESTAMP);
+                  $('input[name=SHA1HASH]').val(response.SHA1HASH);
+                  $('input[name=CUST_NUM]').val(response.CUST_NUM);
+                  $('input[name=VAR_REF]').val(response.CUST_NUM);
+                  $('input[name=SHIPPING_CO]').val($('#BILLING_CO').val());
+                  $('input[name=SHIPPING_CODE]').val($('input[name=BILLING_CODE]').val());
+                  $('#payment-form').submit();
+                },
+                'dataType' : 'json'
+              });
+                  return false;
+            });
+
+            function setRequest(clickval){
+              // $.post("{{url('getRealexRequest')}}",{'amount': $('input[name=AMOUNT]').val(), 'currency': 'USD', 'user_id': '{{details.userName}}', 'billingcode': $('#postalCode_debit').val(), 'billingcountry': $('#countryName_debit').val(), 'billingname' : $('#firstName_debit').val() , 'billingadress' : $('#streetAddress_debit').val(), 'billingtown' : $('#region_debit').val(), 'saveBillingDetails' : $('#a_2').prop("checked"), 'wallet_status': $('#wallet_status').val()}, function (jsonFromServerSdk) {
+              //   RealexHpp.setHppUrl('https://hpp.sandbox.realexpayments.com/pay');
+              //   RealexHpp.init("payButtonId", "{{url('getRealexResponse')}}", jsonFromServerSdk);
+              //   if(clickval==true)
+              //     $('#payButtonId').click();
+                 
+              // },"json");
+            }
+
+
+        });
+
+
+    </script>
+    <!-- braintree script --> 
+
+  <!--<script src="https://js.braintreegateway.com/js/braintree-2.21.0.min.js"></script> -->
+  
+  <script type="text/javascript">
+
+  function usewallet(sub_total,sub_total_price){
+
+    $('#loaderText').html("{% set label = 868 | getmessage_id %}{{label}}...");
+
+    $('#preloader').show();
+
+    $.ajax({
+            url : '{{url("checkwallet_purchase")}}',
+            data: {'sub_total' : sub_total , 'sub_total_price' : sub_total_price},
+            type: 'POST',
+            dataType: 'json',
+            success: function(response){
+
+
+              if(response.status == 0){
+
+                window.location.href = "{{url('wallet_purchase')}}";
+
+                $('#preloader').hide();
+
+              }else{
+
+
+                var rem_amount = response.response_text;
+
+                var rem_amount_p = response.amnt_rem_price;
+
+                 $('.mn_pr h5').html(rem_amount);
+
+                 $('input[name=AMOUNT]').val(rem_amount_p);
+
+                 $('input[name=WALLET_STATUS]').val(1);
+
+                 $('.ppclr.crl').html('0.00 USD')
+
+                 $('#preloader').hide();
+
+                 $('#loaderText').html("{% set label = 588 | getmessage_id %}{{label}}");
+
+              }
+
+             
+            }
+    });
+
+  }
+  
+$('#user_card_details input').focusout(function(){
+  checkbillingdetailsDebit();
+  return false;
+});
+
+  function checkbillingdetailsDebit(){
+        // $('#preloader').show();
+
+        $('.error-msg-form').css('display','none');
+        $('.form-control').removeClass('braintree-hosted-fields-invalid');
+
+        var fname = $('#firstName_debit').val();
+        var streetAddress = $('#streetAddress_debit').val();
+        var city = $('#region_debit').val();
+        var countryName = $('#countryName_debit').val();
+        var postalCode =$('#BILLING_CODE').val();
+
+        if(fname==""){
+          $('#firstName_debit').addClass('braintree-hosted-fields-invalid');
+          $('.error-msg-form.firstName_debit').html('{% set label = 801 | getmessage_id %}{{label}}');
+          $('.error-msg-form.firstName_debit').css('display','block');
+          $('#preloader').hide();
+          return false;
+        }
+        if(streetAddress==""){
+          $('#streetAddress_debit').addClass('braintree-hosted-fields-invalid');
+          $('.error-msg-form.streetAddress_debit').html('{% set label = 802 | getmessage_id %}{{label}}');
+          $('.error-msg-form.streetAddress_debit').css('display','block');
+          $('#preloader').hide();
+          return false;
+        }
+        if(city==""){
+          $('#region_debit').addClass('braintree-hosted-fields-invalid');
+          $('.error-msg-form.region_debit').html('{% set label = 803 | getmessage_id %}{{label}}');
+          $('.error-msg-form.region_debit').css('display','block');
+          $('#preloader').hide();
+          return false;
+        }
+        if(countryName==""){
+          $('#countryName_debit').addClass('braintree-hosted-fields-invalid');
+          $('.error-msg-form.countryName_debit').html('{% set label = 804 | getmessage_id %}{{label}}');
+          $('.error-msg-form.countryName_debit').css('display','block');
+          $('#preloader').hide();
+          return false;
+        }
+        if(postalCode==""){
+          $('#BILLING_CODE').addClass('braintree-hosted-fields-invalid');
+          $('.error-msg-form.postalCode_debit').html('{% set label = 805 | getmessage_id %}{{label}}');
+          $('.error-msg-form.postalCode_debit').css('display','block');
+          $('#preloader').hide();
+          return false;
+        }
+        return 1;
+      }
+
+  </script>
+  <script>
+    $(document).ready(function() {
+
+ 
+    
+
+      $('.disabled').click(function(e){
+        e.preventDefault();
+        return false;
+      });
+
+
+      $('#prm-form').submit(function(){
+        $('#promo_error').html('');
+        $('#promo_error').css('display','none');
+        $('#promo_error').removeClass('grn');
+
+        var promo_val = $('input[name=PROMO_CD]').val();
+        var amount_pay = $('input[name=AMOUNT]').val();
+
+        var promocodeval = $('#promocodeval').val(); //input value
+
+        if(promo_val != ""){
+          return false;
+        }
+        if(promocodeval != ""){
+
+          $.ajax({
+            url : '{{url("check_promo_code")}}',
+            data: {'code' : promocodeval , 'user_id' : '{{details.userName}}'},
+            type: 'POST',
+            dataType: 'json',
+            success: function(response){
+
+              if(response.status == 1){
+
+                var code_id = response.code_id;
+                var percentage = response.percentage;
+
+                var convertedAmountstr = $('.mn_pr h5').html();
+
+                dataSplit = convertedAmountstr.split(" ");
+                
+
+                var currency = dataSplit[0];
+                var amountConv = dataSplit[1];
+
+                new_conv_amountRaw = amountConv-((percentage/100)*amountConv);
+                new_conv_amount = Math.round(new_conv_amountRaw * Math.pow(10,2)) / Math.pow(10,2)
+                new_amountRaw = amount_pay-((percentage/100)*amount_pay);
+                new_amount = Math.round(new_amountRaw * Math.pow(10,2)) / Math.pow(10,2)
+                setAmtPromoSess(new_amount);
+                $('input[name=AMOUNT]').val(new_amount);
+                $('.mn_pr h5').html(currency+" "+new_conv_amount);
+                $('input[name=PROMO_CD]').val(code_id);
+
+                $('#promo_error').html('<i class="fa fa-check fa-lg"></i>'+response.response_text);
+                $('#promo_error').addClass('grn');
+                $('#promo_error').css('display','block');
+
+                //update request
+                // setRequest(false);
+
+                return false;
+              }
+              
+
+
+              $('#promo_error').html('<i class="fa fa-times fa-lg"></i>'+response.response_text);
+              $('#promo_error').css('display','block');
+              return false;
+            }
+          });
+
+          
+          return false;
+        }
+
+        // $('#promo_error').html('unable to apply this code/invalid ');
+        // $('#promo_error').css('display','block');
+        return false;
+      });
+
+      function setAmtPromoSess(amt){
+        $.ajax({
+          url : '{{url("setAmtSession")}}',
+          data: {'amt':amt},
+          type: 'POST',
+          success: function(response){
+            //do nothingggg
+            
+          }
+        });
+      }
+      
+    
+  });
+  </script> 
+  {% endblock body %}
+  {% block customscript %} 
+
+  
+
+
+  {% endblock %} 

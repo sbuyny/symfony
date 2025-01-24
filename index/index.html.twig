@@ -1,0 +1,992 @@
+{% extends 'index/layout.html.twig' %}
+{% block body%}
+<div class="backgroundimage">
+  <div class="container">
+  
+    <div class="col-md-5 col-xs-12">
+      <div class="searchbg">
+        <div class="col-md-12">
+          <h5 class="h5title"><b>{% set label = 82 | getmessage_id %}{{label}}</b></h5>
+        </div>
+        
+        <form>
+         <!--  <div class="formgroup">
+            <div class="col-md-12"> 
+              <ul class="radiobtn">
+                      <li class="acitve">Prepaid</li>
+                      <li>Postpaid</li>
+              </ul> 
+            </div>
+          </div> -->
+          
+          <div id="preloader" style="display:none;">
+          <img style="text-align:center;" id="loading-image" src="{{asset('bundles/paydez-assets/theme/images/loader_logo.gif')}}">
+          <h1 class="rjlod" id="loaderText">{% set label = 201 | getmessage_id %}{{label}}....</h1>
+          </div>
+
+          <div class="clearfix"></div>
+          <div class="form-group">
+            <div class="col-md-12">
+              <div class="form-control-material mn_mrg_none">
+                <div class="input-group "> 
+                <span class="input-group-addon"><span class="sprite icon1"></span></span> 
+                <span class="input-group-addon nwelineheight">
+                  <div class="btn-group"> 
+                    <!-- CURRENCY, BOOTSTRAP DROPDOWN --> 
+
+                    {% set defaultCountryIp = 1 | setGeoLocation %}
+
+                    {% set details_default = defaultCountryIp | getflag %} 
+
+                    {% set default_code = details_default.code %}
+                    
+                    <a id="extnsncode" class="btn btn-primary dropdown-toggle codeSelector" data-toggle="dropdown" href="#"> 
+                    <img id="orgflag" src="{{asset('bundles/paydez-assets/theme/flags/16/')}}{{details_default.flag}}" alt="countryflag"> <span class="mn_numer">+{{details_default.code}}</span> <span><i class="fa fa-caret-down" aria-hidden="true"></i></span>
+                    </a>
+                    
+                    <ul class="dropdown-menu drp-n">
+					            
+                      {% for key, countrylist in country %}
+
+                      {% if details_default.code != countrylist.code %}
+
+                      <li onClick="SetExtension('{{countrylist.code}}')"> <a href="javascript:void(0);">
+                      <img src="{{asset('bundles/paydez-assets/theme/flags/16/')}}{{countrylist.flag}}" /><span class="mn_numer">+</span>{{countrylist.code}}</a> </li>
+
+                      {% endif %}
+
+                      {% endfor %}
+
+                    </ul>
+                  </div>
+                  </span>
+
+                  
+                  <input type="text" onChange="checkInput(this)" onKeyup="checkInput(this)" autocapitalize="off" autocorrect="off" autocomplete="off" title="" class="form-control mn_hieg" id="mobilenum" placeholder="{% set label = 85 | getmessage_id %}{{label}}" maxlength="14">
+                   <a href="javascript:void(0);" class="lablhigt cartsec lan_e">{% set label = 88 | getmessage_id %}{{label}}</a>
+		   
+		   
+
+                  <label for="numberlabel" id="errorfornumb"></label>
+                </div>
+                <span id="errornum"></span> </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-md-12">
+              <div class="form-control-material">
+                <div class="input-group"> <span class="input-group-addon"><span class="sprite icon2"></span></span>
+                  <input type="text" readonly class="form-control" id="operator" placeholder="{% set label = 91 | getmessage_id %}{{label}}">
+                  <label for="operator"></label>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% set currency_symbol = app.session.get('default_language') | getcurrencysymbol %}
+          <div class="form-group">
+            <div class="col-md-12">
+              <div class="form-control-material">
+                <div class="input-group"> <span class="input-group-addon mn_font"><!--<span class="sprite icon3"></span>-->{{currency_symbol}}</span>
+                  <input type="text" readonly class="form-control" id="amountplan" placeholder="{% set label = 94 | getmessage_id %}{{label}}">
+                  <label for="inputEmail3"></label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+           {% if app.request.attributes.get('_route_params') is not empty and app.request.attributes.get('_route_params')['rechargesendrequest'] is defined %}
+
+          <div class="form-group">
+            <div class="col-md-12">
+              <div class="form-control-material">
+                <div class="input-group"> <span class="input-group-addon mn_font">
+                  <i class="fa fa-envelope-o fa-lg" aria-hidden="true"></i>
+                  </span>
+                  <input type="text" placeholder="EmailId" id="email" name="email" class="form-control">
+                  <label for="account_id"></label>
+                </div>
+                <span style="color:red" id="error_email_id"></span>
+              </div>
+            </div>
+          </div>
+
+          <input type="hidden" name="send_recharge" id="send_recharge" value="1" />
+          {% else %}
+          <input type="hidden" name="send_recharge" id="send_recharge" value="0" />
+          {% endif %}
+
+          <div class="form-group">
+            <div class="col-md-12">
+              <div class="padding15">
+                <div class="input-group">
+                  
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <input type="hidden" name="service_type" id="service_type" value="{{api_service_id}}" />
+          <input type="hidden" name="extension_code" id="extension_code" value="{{details_default.code}}" />
+          <input type="hidden" name="operator_id" id="operator_id" value="" />
+          <input type="hidden" name="operator_name" id="operator_name" value="" />
+          <input type="hidden" name="currency" id="currency" value="" />
+          <input type="hidden" name="original_currency" id="original_currency" value="" />
+          <input type="hidden" name="original_price" id="original_price" value="" />
+          <input type="hidden" name="converted_price" id="converted_price" value="" />
+
+
+          <div class="form-group">
+            <div class="col-md-12">
+              <input type="button" value="{% set label = 98 | getmessage_id %}{{label}}" disabled class="btn btn-newstl rechargeclick" id="rechargeclick" onclick="sendforrecharge()"/>
+            </div>
+          </div>
+          <div class="gap gap-small"></div>
+        </form>
+      </div>
+    </div>
+    
+    {% set sliderData = 20 | getDynamicContent(3) %}
+    {% if sliderData is not empty %}
+    <div class="col-md-5 col-md-offset-2 hidden-xs hidden-sm ddd">
+      <div class="advertisement200 ads">
+       <!--  <div id="owl-demo" class="owl-carousel" > -->
+          {% for sliderDataVal in sliderData  %}
+          <div title="{{sliderDataVal.d_title}}">
+           <p>{{sliderDataVal.d_content}}</p>
+          </div>
+          {% endfor %}
+        <!-- </div> -->
+      </div>
+    </div>
+    {% endif %}
+
+    
+  </div>
+</div>
+
+<div class="clearfix"></div>
+
+<div class="container">
+  <div class="sectbk">
+
+    {% set topSectionData = 1 | getDynamicContent(4) %}
+	
+    <div class="col-md-3 col-sm-6 col-xs-12">
+      <div class="rounded pull-left"> <span class="sprite2 mobilerecharge"></span> </div>
+      <div class="leftbkcircle pull-left">
+        <h4>{{topSectionData[0].d_title}}</h4>
+        <p>{{topSectionData[0].d_content}}</p>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 col-xs-12">
+      <div class="rounded pull-left"> <span class="sprite2 dthrecharge"></span> </div>
+      <div class="leftbkcircle pull-left">
+
+        <h4>{{topSectionData[1].d_title}}</h4>
+        <p>{{topSectionData[1].d_content}}</p>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 col-xs-12">
+      <div class="rounded pull-left"> <span class="sprite2 datacard"></span></span> </div>
+      <div class="leftbkcircle pull-left">
+        <h4>{{topSectionData[2].d_title}}</h4>
+        <p>{{topSectionData[2].d_content}}</p>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 col-xs-12">
+      <div class="rounded pull-left"> <span class="sprite2 electricitybill"></span> </div>
+      <div class="leftbkcircle pull-left">
+        <h4>{{topSectionData[3].d_title}}</h4>
+        <p>{{topSectionData[3].d_content}}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="clearfix"></div>
+
+<div class="greycolor">
+  <div class="container">
+
+  {% set middleSectionData = 2 | getDynamicContent(3) %}
+
+    <div class="col-md-4  col-sm-12 col-xs-12">
+      <div class="rounded2"> <span class="sprite2 instant"></span> </div>
+      <div class="text-center">
+        <h4 class="h4mb">{{middleSectionData[0].d_title}}</h4>
+        <p class="pstl">{{middleSectionData[0].d_content}}</p>
+      </div>
+    </div>
+    <div class="col-md-4  col-sm-12 col-xs-12">
+      <div class="borderleftright">
+        <div class="rounded2"> <span class="sprite2 safeandsecure"></span> </div>
+        <div class="text-center">
+          <h4 class="h4mb">{{middleSectionData[1].d_title}}</h4>
+          <p class="pstl">{{middleSectionData[1].d_content}}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4  col-sm-12 col-xs-12">
+      <div class="rounded2"> <span class="sprite2 convenient"></span> </div>
+      <div class="text-center">
+        <h4 class="h4mb">{{middleSectionData[2].d_title}}</h4>
+        <p class="pstl">{{middleSectionData[2].d_content}}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="clearfix"></div>
+
+<div class="bluecolor padding15">
+  <div class="conatiner">
+    <div class="col-md-12 text-center">
+      <h4 class="textwhite font24px">{% set label = 99 | getmessage_id %}{{label}}</h4>
+    </div>
+    <div class="clearfix"></div>
+   <div class="map">
+   
+   
+    <div class="wifi-symbol psn_n1" title="">
+  <div class="wifi-circle first"></div>
+  <div class="wifi-circle second"></div>
+  <div class="wifi-circle third"></div>
+  <div class="wifi-circle fourth"></div>
+  <div class="rgt">
+  <div class="wifi-circle first5"></div>
+  <div class="wifi-circle second6"></div>
+  <div class="wifi-circle third7"></div>
+  </div>
+</div>
+
+
+<div class="wifi-symbol psn_n2">
+  <div class="wifi-circle first"></div>
+  <div class="wifi-circle second"></div>
+  <div class="wifi-circle third"></div>
+  <div class="wifi-circle fourth"></div>
+  <div class="rgt">
+  <div class="wifi-circle first5"></div>
+  <div class="wifi-circle second6"></div>
+  <div class="wifi-circle third7"></div>
+  </div>
+</div>
+<div class="wifi-symbol psn_n3">
+  <div class="wifi-circle first"></div>
+  <div class="wifi-circle second"></div>
+  <div class="wifi-circle third"></div>
+  <div class="wifi-circle fourth"></div>
+  <div class="rgt">
+  <div class="wifi-circle first5"></div>
+  <div class="wifi-circle second6"></div>
+  <div class="wifi-circle third7"></div>
+  </div>
+</div>
+<div class="wifi-symbol psn_n4">
+  <div class="wifi-circle first"></div>
+  <div class="wifi-circle second"></div>
+  <div class="wifi-circle third"></div>
+  <div class="wifi-circle fourth"></div>
+  <div class="rgt">
+  <div class="wifi-circle first5"></div>
+  <div class="wifi-circle second6"></div>
+  <div class="wifi-circle third7"></div>
+  </div>
+</div>
+<div class="wifi-symbol psn_n5">
+  <div class="wifi-circle first"></div>
+  <div class="wifi-circle second"></div>
+  <div class="wifi-circle third"></div>
+  <div class="wifi-circle fourth"></div>
+  <div class="rgt">
+  <div class="wifi-circle first5"></div>
+  <div class="wifi-circle second6"></div>
+  <div class="wifi-circle third7"></div>
+  </div>
+</div>
+<div class="wifi-symbol psn_n6">
+  <div class="wifi-circle first"></div>
+  <div class="wifi-circle second"></div>
+  <div class="wifi-circle third"></div>
+  <div class="wifi-circle fourth"></div>
+  <div class="rgt">
+  <div class="wifi-circle first5"></div>
+  <div class="wifi-circle second6"></div>
+  <div class="wifi-circle third7"></div>
+  </div>
+</div>
+
+     </div>
+  </div>
+</div>
+
+<div class="clearfix"></div>
+
+<div class="howitworksbk">
+  <div class="container">
+    <div class="col-md-12 text-center">
+      <h4 class="textwhite font24px">{% set label = 10 | getmessage_id %}{{label}}</h4>
+    </div>
+    <div class="gap gap-small"></div>
+    <div class="bulletpints"></div>
+
+    {% set howitWorksData = 3 | getDynamicContent(3) %}
+
+    <div class="col-md-4  col-sm-12 col-xs-12">
+      <div class="rounded2"> <span class="sprite2 phonenumber"></span> </div>
+      <div class="text-center">
+        <h4 class="h4mb textwhite h4margnnew">{{howitWorksData[0].d_title}}</h4>
+        <p class="pstl textgreyclr">{{howitWorksData[0].d_content }}</p>
+      </div>
+    </div>
+    <div class="col-md-4  col-sm-12 col-xs-12">
+      <div class="rounded2"> <span class="sprite2 mobilecarrier"></span> </div>
+      <div class="text-center">
+        <h4 class="h4mb textwhite h4margnnew">{{howitWorksData[1].d_title}}</h4>
+        <p class="pstl textgreyclr">{{howitWorksData[1].d_content}}</p>
+      </div>
+    </div>
+    <div class="col-md-4  col-sm-12 col-xs-12">
+      <div class="rounded2"> <span class="sprite2 amount"></span> </div>
+      <div class="text-center">
+        <h4 class="h4mb textwhite h4margnnew">{{howitWorksData[2].d_title}}</h4>
+        <p class="pstl textgreyclr">{{howitWorksData[2].d_content}}</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="clearfix"></div>
+<div>
+
+  <div class="gap gap-small"></div>
+  {% set clientImages = 6 | getFrontendImages %}
+  {% if clientImages is not empty %}
+  <div class="container">
+
+    <div class="col-md-12 text-center">
+      <h4 class="font24px">{% set label = 101 | getmessage_id %}{{label}}</h4>
+    </div>
+    <div class="clearfix"></div>
+    <div class="slider">
+      <div id="owl-democonsumer" class="owl-carousel owl-theme">
+
+        {% for dataClientImage in clientImages %}
+
+        <div class="item"><img id="grayscale" src="{{asset('bundles/paydez-assets/uploads/cms-images/'~dataClientImage.imgePath)}}" alt="dataClientImage.title" /></div>
+
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+
+{% set testimonialData = 3 | getTestimonialsData %}
+{% if testimonialData is not empty %}
+<div class="clearfix"></div>
+<div class="testimonial">
+<div class="container">
+    <div class="col-md-12 text-center">
+      <h4 class="textwhite font24px">{% set label = 106 | getmessage_id %}{{label}}</h4>
+    </div>
+
+    <div class="clearfix"></div>
+    
+    {% for testimon_data in testimonialData %}
+    <div class="col-md-4  col-sm-12 col-xs-12">
+      <div class="postrel">
+        <div class="profilepic"><img src="{{asset('bundles/paydez-assets/uploads/testimonial-images/'~testimon_data.t_image)}}" alt="{{testimon_data.t_name}}"  /></div>
+        <div class="testimonialdiv bluecolor"> <i class="fa fa-quote-right textwhite font24pximp"></i>
+          <p class="text-justify textwhite" >{{testimon_data.t_content}}</p>
+          <i class="fa fa-quote-right textwhite font24pximp pull-right"></i>
+          <div class="clearfix"></div>
+          <div class="text-center textwhite"> <b>{{testimon_data.t_name}}</b> </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+{% endif %}
+
+<div class="clearfix"></div>
+<div class="padding15">
+  <div class="container">
+    <div class="col-md-4 col-xs-12">
+      <div class="socialtitle">{% set label = 49 | getmessage_id %}{{label}}</div>
+      <div class="socialbk"><a href="https://www.facebook.com/paydezrecharge/
+" target="_blank"><i class="flaticon-facebook55"></i></a></div>
+      <div class="socialbk"><a href="https://twitter.com/paydezrecharge
+" target="_blank"><i class="flaticon-twitter1"></i></a></div>
+      <div class="socialbk"><a href="https://plus.google.com/b/113357295243639224766/113357295243639224766/posts
+" target="_blank"><i class="flaticon-google116"></i></a></div>
+      <div class="socialbk"><a href="https://www.youtube.com/channel/UCJ1Dpy6IQENYT0r3yMmUFcg" target="_blank"><i class="flaticon-youtube18"></i></a></div>
+
+
+
+    </div>
+    <div class="col-md-6 col-md-offset-2 col-xs-12">
+      <div class="socialbk arownew"><a href="#"><img class="trp_n" src="{{asset('bundles/paydez-assets/theme/images/favicon.png')}}"  /> <!-- <i class="flaticon-twitter1"></i> --></a></div>
+      <div class="ptextbk">
+        <p class="text-justify"><i>{% set label = 2018 | getmessage_id %}{{label}}</i></p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="md-modal md-effect-11" id="modal-11">
+  <div class="md-content"> </div>
+</div>
+<div class="md-overlay"></div>
+
+<!--plans start-->
+
+<div class="clearfix"></div>
+<div class="cartall">
+  <div class="cartfade"></div>
+  <div class="incart">
+    <div class="closepopup">X</div>
+    
+    <div class="cartcontnt">
+      <div class="tabbable-panel">
+        <div class="tabbable-line">
+          <div class="tab-content">
+            
+            <div class="form-group">
+            <div class="col-md-12 bg-1">
+              <div class="form-control-material mn_mrg_none">
+                <div class="input-group "> <span class="input-group-addon"><span class="sprite icon1"></span></span> 
+                <span class="input-group-addon nwelineheight">
+                  <div class="btn-group"> 
+                    
+                    <!-- CURRENCY, BOOTSTRAP DROPDOWN --> 
+
+                    {% set details_default = app.session.get('default_country') | getflag %} 
+
+                    {% set default_code = details_default.code %}
+                    
+                    <a id="extnsncode1" class="btn btn-primary dropdown-toggle codeSelector" data-toggle="dropdown" href="#"> <img id="flagforchange" src="{{asset('bundles/paydez-assets/theme/flags/16/')}}{{details_default.flag}}"> <span class="mn_numer" id="extforchange">+{{details_default.code}}</span> <span class="caret"></span></a>
+
+                    {% set default = app.session.get('default_country') %}
+
+                      <ul class="dropdown-menu drp-n">
+
+
+                      {% for key, countrylist in country %}
+
+                      
+
+                      <li onClick="SetExtension1('{{countrylist.code}}')"> <a href="javascript:void(0);"><img src="{{asset('bundles/paydez-assets/theme/flags/16/')}}{{countrylist.flag}}" /><span class="mn_numer">+</span>{{countrylist.code}}</a> </li>
+
+                      
+
+                      {% endfor %}
+
+                    </ul>
+                  </div>
+                  </span>
+                  
+
+                  <input type="text" onChange="checkInput(this)" onKeyup="checkInput(this)" autocapitalize="off" autocorrect="off" autocomplete="off" title="" class="form-control mn_hieg mn_float_left" id="mobilenum1" placeholder="{% set label = 85 | getmessage_id %}{{label}}" maxlength="14">
+                  <a onclick="changeplan();" href="#" class="pull-right btn btn-info bt-n bt-rspn">{% set label = 897 | getmessage_id %}{{label}}</a>
+                  <a onclick="changeplan();"href="#"><div class="icon_hide"><i class="fa fa-exchange"></i></div></a>
+                  <span id="errornum1"></span> </div>
+                  <label for="numberlabel1" id="errorfornumb1"></label>
+                </div>
+                <span id="errornum"></span> </div>
+            </div>
+          </div>
+             
+
+            </div>
+            <div class="tab-pane active" id="tab_default_1"> </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="clearfix"></div>
+<!--plans end --> 
+
+
+{% endblock body %}
+{% block customscript %} 
+
+<!-- for the blur effect --> 
+<!-- by @derSchepp https://github.com/Schepp/CSS-Filters-Polyfill --> 
+<!-- <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script> --> 
+<!--
+<script>
+    // this is important for IEs
+var polyfilter_scriptpath = '/js/';
+</script> 
+<script src="{{asset('bundles/paydez-assets/theme/js/cssParser.js')}}"></script> 
+<script src="{{asset('bundles/paydez-assets/theme/js/css-filters-polyfill.js')}}"></script> -->
+<script src="{{asset('bundles/paydez-assets/theme/owl-carousel/owl.carousel.min.js')}}"></script>
+
+{% set selectedOperator = '' %}
+{% if app.request.attributes.get('_route_params') is not empty and app.request.attributes.get('_route_params')['oprName'] is defined %}
+
+{% set selectedOperator = app.request.attributes.get('_route_params')['oprName'] %}
+{% endif %}
+<script>
+
+function checkInput(ob){
+
+    var invalidChars = /[^0-9]/gi
+    if(invalidChars.test(ob.value)) {
+            ob.value = ob.value.replace(invalidChars,"");
+    }
+    else{
+
+        
+
+    }
+
+}
+
+
+
+$(document).ready(function() {
+  
+$('#operator').val('{{selectedOperator}}');
+
+
+ $(".dropdown-menu li a").click(function () {
+    var selText = $(this).text();
+    var imgSource = $(this).find('img').attr('src');
+    var img = '<img src="' + imgSource + '"/>';        
+    $(this).parents('.btn-group').find('.dropdown-toggle').html(img + ' ' + selText + ' <span><i aria-hidden="true" class="fa fa-caret-down"></i></span>');
+});
+
+ $("#owl-demo").owlCarousel({
+    autoPlay : 3000,
+    stopOnHover : true,
+    navigation:false,
+    paginationSpeed : 1000,
+    goToFirstSpeed : 2000,
+    singleItem : true,
+    autoHeight : false,
+    transitionStyle:"fade"
+  });
+  
+   
+   
+  var owldemoconsumer = $("#owl-democonsumer");
+ 
+  owldemoconsumer.owlCarousel({
+     autoPlay : 3000,
+      itemsCustom : [
+        [0, 2],
+        [450, 4],
+        [600, 6],
+        [700, 7],
+        [1000, 9],
+        [1200, 9]
+      ],
+      navigation : false
+ 
+  });
+  
+  
+});
+</script> 
+<script>
+
+    $('.cartsec').click(function(){
+
+            var phn = $('#mobilenum').val();
+
+            var filter = /^((\+[1-9]{1,4}[ \-]*)|(\([0-9]{2,3}\)[ \-]*)|([0-9]{2,4})[ \-]*)*?[0-9]{3,4}?[ \-]*[0-9]{3,4}?$/;
+            
+            if (filter.test(phn)) {
+                
+                var extnsncode = $('#extension_code').val();
+                
+                var phone = extnsncode+phn;
+
+                $('#preloader').show();
+                
+                 $.ajax({
+                     type: "POST",
+                     dataType:"html",
+                     url: "{{ path('GetRechargedetails') }}", 
+                     data: "phone_num="+phone,
+                     success: function(data) {
+                       
+                        var details = data.split("<><>");
+
+                        if(details[3]=="1"){
+
+                            var selcontr = $('#extnsncode').html();
+
+
+                            $('#extnsncode1').html(selcontr);
+
+                            $('#mobilenum1').val(phn);
+
+                            var image = 'https://fm.transfer-to.com/logo_operator/logo-'+details[2]+'-1.png';
+
+                            $('#image_operator').attr('src',image);
+
+                            $('#tab_default_1').html(details[0]);
+
+                            $('.plan_type').html(details[1]+" "+'Recharge Plan');
+
+                            $('#operator').val(details[1]);
+
+                            $('#amountplan').val(details[4]);
+
+                            $('#operator_id').val(details[2]);
+
+                            $('#operator_name').val(details[1]);
+
+                            $('#currency').val(details[5]);
+
+                            $('#original_currency').val(details[6]);
+
+                            $('#rechargeclick').prop('disabled',false);
+
+                            var $links = $('a');
+
+                            $links.click(function () {
+
+                                if( $(this).find('.offer-primary').hasClass('actbd')){
+
+                                  $(this).find('.offer-primary').removeClass('actbd');
+                                  $(this).find('.offer-primary').removeClass('selectick');
+
+                                }else{
+
+                                  $('.incart').find('.offer-primary').removeClass('actbd');
+                                  $('.incart').find('.offer-primary').removeClass('selectick');
+
+                                  $(this).find('.offer-primary').addClass('actbd');
+                                  $(this).find('.offer-primary').addClass('selectick');
+                                }
+                                
+                            });
+
+                            var img = '<img src="https://fm.transfer-to.com/logo_operator/logo-'+details[2]+'-1.png">';
+
+                            $('#loaderText').html('{% set label = 245 | getmessage_id %}{{label}} .. <br/><br/>'+img+'<br/><br/> '+details[1]);
+
+                            setTimeout(function(){ $('body').addClass("cart-open");
+
+                              
+                              $('#preloader').hide();
+
+                              $('#loaderText').html('{% set label = 201 | getmessage_id %}{{label}}...');
+
+
+                            }, 2000);
+
+                            
+
+                            
+                        
+                        }else{
+
+                            $('#operator').val('');
+
+                            $('#amountplan').val('');
+
+                            $("#errornum").html("{% set label = 530 | getmessage_id %}{{label}}");
+
+                            $('#preloader').hide();
+
+                            return false;
+                        }
+
+                        
+
+                     }
+                 });
+
+
+            }
+
+            
+    });
+
+    function changeplan(){
+
+      var phn = $('#mobilenum1').val();
+
+            var filter = /^((\+[1-9]{1,4}[ \-]*)|(\([0-9]{2,3}\)[ \-]*)|([0-9]{2,4})[ \-]*)*?[0-9]{3,4}?[ \-]*[0-9]{3,4}?$/;
+            
+            if (filter.test(phn)) {
+                
+                var extnsncode = $('#extension_code').val();
+                
+                var phone = extnsncode+phn;
+
+                $('#preloader').show();
+                
+                 $.ajax({
+                     type: "POST",
+                     dataType:"html",
+                     url: "{{ path('GetRechargedetails') }}", 
+                     data: "phone_num="+phone,
+                     success: function(data) {
+                       console.log(data);return false;
+                        var details = data.split("<><>");
+
+                        if(details[3]=="1"){
+
+                            var selcontr = $('#extnsncode').html();
+                            
+                            $('#extnsncode1').html(selcontr);
+
+                            $('#mobilenum1').val(phn);
+
+                            var image = "https://fm.transfer-to.com/logo_operator/logo-"+details[2]+"-1.png";
+
+                            $('#image_operator').attr('src',image);
+
+                            $('#tab_default_1').html(details[0]);
+
+                            $('.plan_type').html(details[1]+" "+'Recharge Plan');
+
+                            $('#operator_id').val(details[2]);
+
+                            $('#operator_name').val(details[1]);
+
+                            $('#currency').val(details[5]);
+
+                            $('#original_currency').val(details[6]);
+
+                            var $links = $('a');
+
+                            $links.click(function () {
+
+                                if( $(this).find('.offer-primary').hasClass('actbd')){
+
+                                  $(this).find('.offer-primary').removeClass('actbd');
+                                  $(this).find('.offer-primary').removeClass('selectick');
+
+                                }else{
+
+                                  $('.incart').find('.offer-primary').removeClass('actbd');
+                                  $('.incart').find('.offer-primary').removeClass('selectick');
+
+                                  $(this).find('.offer-primary').addClass('actbd');
+                                  $(this).find('.offer-primary').addClass('selectick');
+                                }
+                                
+                            });
+
+
+                            var img = '<img src="https://fm.transfer-to.com/logo_operator/logo-'+details[2]+'-1.png">';
+
+                            $('#loaderText').html('{% set label = 245 | getmessage_id %}{{label}} .. <br/><br/>'+img+'<br/><br/> '+details[1]);
+
+                            setTimeout(function(){ 
+
+
+                              $('body').addClass("cart-open");
+
+                              $('#preloader').hide();
+
+                              $('#loaderText').html('{% set label = 201 | getmessage_id %}{{label}}...');
+
+                              //return false;
+
+
+                            }, 2000);
+
+                            
+                        
+                        }else{
+
+
+                            $("#errornum1").html("{% set label = 530 | getmessage_id %}{{label}}");
+
+                            $('#tab_default_1').html("");
+
+                            $('#preloader').hide();
+
+                            return false;
+                        }
+
+                        
+
+                     }
+                 });
+
+
+            }
+    }
+
+    function SetExtension(code){
+        
+      $('#extension_code').val(code);
+
+    }
+
+    function SetExtension1(code){
+        
+      $('#extension_code').val(code);
+
+    }
+        
+    $('.cartclose, .cartfade').click(function(){
+        $('body').removeClass("cart-open");
+    });
+
+    $('.closepopup').click(function(){
+        $('body').removeClass("cart-open");
+    });
+     
+
+    function setamount(amount,originalamount,id){
+
+        $('#amountplan').val(amount);
+
+        $('#original_price').val(originalamount);
+
+        $('#converted_price').val(amount);
+
+       
+        //$('body').removeClass("cart-open");
+
+    }
+
+    function sendforrecharge(){
+
+      var service_type = $('#service_type').val();
+
+      var extension_code = $('#extension_code').val();
+
+      var operator_id = $('#operator_id').val();
+
+      var operator_name = $('#operator_name').val();
+
+      var currency = $('#currency').val();
+
+      var original_currency = $('#original_currency').val();
+
+      var original_price = $('#original_price').val();
+
+      var converted_price = $('#converted_price').val();
+
+      var mobilenum = $('#mobilenum').val();
+
+      if($('#send_recharge').val()=="1"){
+
+        var email = $('#email').val();
+
+        var filter = /^[\w\-\.\+]+\@[a-zA-Z0-9\.\-]+\.[a-zA-z0-9]{2,4}$/;
+        
+        if (filter.test(email)) {
+        
+        }
+        else {
+
+          $('#error_email_id').html("{% set label = 221 | getmessage_id %}{{label}}");
+          return false;
+        
+        }
+
+      }else{
+
+        var email = "";
+
+      }
+
+      if(mobilenum!='' && original_price!="" && converted_price!=""){
+
+        $.ajax({
+
+               type: "POST",
+               dataType:"html",
+               url: "{{ path('SetrechargeDetails') }}", 
+               data: "service_type="+service_type+"&mobilenum="+mobilenum+"&operator_id="+operator_id+"&operator_name="+operator_name+"&currency="+currency+"&converted_price="+converted_price+"&original_price="+original_price+"&extension_code="+extension_code+"&original_currency="+original_currency+"&email="+email,
+               success: function(data) {
+                           //console.log(data);return false;
+                           if(email==""){
+
+                              window.location.href = "{{ url('orders') }}";
+
+                            }else{
+
+                              window.location.href = "{{ url('sendrequest') }}";
+
+                           }
+
+               }
+        });
+
+      }else{
+
+        window.location.href="{{ url('orders') }}";
+
+      }
+  
+      
+
+    }
+
+    
+</script> 
+
+<script>
+        (function($){
+            $(window).load(function(){
+                
+                $.mCustomScrollbar.defaults.scrollButtons.enable=true; //enable scrolling buttons by default
+                $.mCustomScrollbar.defaults.axis="yx"; //enable 2 axis scrollbars by default
+                
+                $("#content-l").mCustomScrollbar();
+                $("#content-2").mCustomScrollbar();
+                $("#content-3").mCustomScrollbar();
+                $("#content-4").mCustomScrollbar();
+                $("#content-5").mCustomScrollbar();
+                $("#content-6").mCustomScrollbar();
+                
+                
+                $(".all-themes-switch a").click(function(e){
+                    e.preventDefault();
+                    var $this=$(this),
+                        rel=$this.attr("rel"),
+                        el=$(".content");
+                    switch(rel){
+                        case "toggle-content":
+                            el.toggleClass("expanded-content");
+                            break;
+                    }
+                });
+                
+            });
+        })(jQuery);
+
+       
+</script> 
+<!-- making background images dynamic -->
+{% set homeBg = 3 | getFrontendImages %}
+{% set homeBgImage = (homeBg|length > 0 ? homeBg[0].imgePath : "") %}
+{% set howitworksBg = 4 | getFrontendImages %}
+{% set howitworksBgImage = (howitworksBg|length > 0 ? howitworksBg[0].imgePath : "") %}
+{% set testimonialsBg = 4 | getFrontendImages %}
+{% set testimonialsBgImage = (testimonialsBg|length > 0 ? testimonialsBg[0].imgePath : "") %}
+<script type="text/javascript">
+   $(document).ready(function(){
+          var url = "{{asset('bundles/paydez-assets/uploads/cms-images/')}}";
+          var homeBg = '{{homeBgImage}}';
+          var howitworksBg = '{{howitworksBgImage}}';
+          var testimonialsBg = '{{testimonialsBgImage}}';
+          if(homeBg != ""){
+            $('.backgroundimage').css('background','url(\"'+url+''+homeBg+'\") no-repeat fixed 0 0 / cover');
+          }
+          if(howitworksBg != ""){
+            $('.howitworksbk').css('background','url(\"'+url+''+howitworksBg+'\") no-repeat fixed 0 0 / cover');
+          }
+          if(testimonialsBg != ""){
+            $('.testimonial').css('background','url(\"'+url+''+testimonialsBg+'\") no-repeat fixed 0 0 / cover');
+          }
+    });
+</script>
+<!-- making background images dynamic -->
+{% endblock %} 
